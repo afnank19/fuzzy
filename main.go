@@ -1,6 +1,7 @@
 package main
 
 import (
+	"distance/levenshtein/internal"
 	"fmt"
 	"io/fs"
 	"math"
@@ -25,18 +26,18 @@ var inputStyle = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#bdae
 var listStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff"))
 var selectedItemStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#edf8ff"))
 
-type SearchResult struct {
-	Word            string
-	MinEditDistance int
-	Likeness        float32
-	Score           int
-	Path            string
-}
+// type SearchResult struct {
+// 	Word            string
+// 	MinEditDistance int
+// 	Likeness        float32
+// 	Score           int
+// 	Path            string
+// }
 
 type model struct {
 	turing       string
 	typedWord    string
-	searchResult []SearchResult
+	searchResult []internal.SearchResult
 	windowHeight int
 	windowWidth  int
 }
@@ -153,8 +154,8 @@ func (m model) View() string {
 	return terminalCenter.Render(dirList + "\n\n" + input)
 }
 
-func initializeFileList() []SearchResult {
-	srs := []SearchResult{}
+func initializeFileList() []internal.SearchResult {
+	srs := []internal.SearchResult{}
 
 	// Get the users home directory
 	homeDir, err := os.UserHomeDir()
@@ -164,9 +165,9 @@ func initializeFileList() []SearchResult {
 
 	count := 0
 
-	DirWalk(homeDir, &srs, &count)
+	// irWalk(homeDir, &srs, &count)
 
-	// internal.DirWalk(homeDir, &srs, &count)
+	internal.DirWalk(homeDir, &srs, &count)
 
 	fmt.Print("Total files (non-dir) read: ")
 	fmt.Println(count)
@@ -174,7 +175,7 @@ func initializeFileList() []SearchResult {
 	return srs
 }
 
-func DirWalk(path string, strs *[]SearchResult, count *int) {
+func DirWalk(path string, strs *[]internal.SearchResult, count *int) {
 	// This can either take the path variable or use "./"
 	// To be modified according to use case
 	err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
@@ -201,7 +202,7 @@ func DirWalk(path string, strs *[]SearchResult, count *int) {
 		// But fzf uses a different algorithm that doesn't really perform well if you misspell
 		// your query, wherease this algorithm tries to guess what you meant
 		if !info.IsDir() {
-			*strs = append(*strs, SearchResult{Word: info.Name(), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
+			*strs = append(*strs, internal.SearchResult{Word: info.Name(), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
 			*count++
 		}
 
@@ -224,7 +225,7 @@ func isHiddenDir(path string) bool {
 	return false // Check if it starts with a dot
 }
 
-func runLevenshtein(srs []SearchResult, input string) []SearchResult {
+func runLevenshtein(srs []internal.SearchResult, input string) []internal.SearchResult {
 	for i := 0; i < len(srs); i++ {
 		srs[i] = levenshtein(input, srs[i])
 	}
@@ -244,7 +245,7 @@ func runLevenshtein(srs []SearchResult, input string) []SearchResult {
 	return srs
 }
 
-func levenshtein(str_1 string, sr SearchResult) SearchResult {
+func levenshtein(str_1 string, sr internal.SearchResult) internal.SearchResult {
 	var str_2 string = sr.Word //Get it from some dict
 
 	var inputLength = len(str_1) + 1
@@ -298,7 +299,7 @@ func convertWordToNGram(word string) []string {
 	return nGrams
 }
 
-func runSearchAlgo(sr *[]SearchResult, nGramedWord []string) {
+func runSearchAlgo(sr *[]internal.SearchResult, nGramedWord []string) {
 
 	// 1. Loop over all files
 	for i := 0; i < len(*sr); i++ {
