@@ -163,8 +163,12 @@ func initializeFileList() []SearchResult {
 	}
 
 	count := 0
+
 	DirWalk(homeDir, &srs, &count)
-	fmt.Print("Total Files (non-dir) read: ")
+
+	// internal.DirWalk(homeDir, &srs, &count)
+
+	fmt.Print("Total files (non-dir) read: ")
 	fmt.Println(count)
 
 	return srs
