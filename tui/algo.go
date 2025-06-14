@@ -19,6 +19,7 @@ func initializeFileList() []SearchResult {
 	}
 
 	count := 0
+	// homeDir, _ = os.Getwd()
 
 	DirWalk(homeDir, &srs, &count)
 
@@ -97,7 +98,7 @@ func RunSearchAlgo(sr *[]SearchResult, nGramedWord []string) {
 	}
 
 	sort.Slice(*sr, func(i, j int) bool {
-		return (*sr)[i].Likeness < (*sr)[j].Likeness
+		return (*sr)[i].Likeness > (*sr)[j].Likeness
 	})
 }
 

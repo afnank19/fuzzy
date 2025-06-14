@@ -60,7 +60,7 @@ func initialModel() model {
 		results: list{
 			items:  sr,
 			cursor: 0,
-			height: 7,
+			height: 13,
 			offset: 0,
 		},
 	}
@@ -99,9 +99,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right", "left", "tab", "enter":
 
 		case "up":
-			scrollListDown(&m.results)
-		case "down":
 			scrollListUp(&m.results)
+		case "down":
+			scrollListDown(&m.results)
 
 		default:
 			m.typedWord += msg.String()
@@ -151,18 +151,18 @@ func (m model) View() string {
 	// }
 	// dirList += selectedItemStyle.Render(" > " + m.searchResult[idx].Path + " - " + fmt.Sprintf("%v", m.searchResult[idx].Likeness) + "\n")
 
-	end := min(m.results.offset+m.results.height, len(m.results.items))
+	end := min(m.results.offset+m.results.height, len(m.results.items)) - 1
 
-	for i := m.results.offset; i < end; i++ {
+	for i := end; i >= m.results.offset; i-- {
 		cursor := " " // no cursor by default
-		currItem := m.results.items[i].Word
+		currItem := m.results.items[i].Path
 
 		if i == m.results.cursor {
 			cursor = ">" // cursor indicator
 			// currItem = currItem
 		}
 
-		dirList += fmt.Sprintf("%s %s\n", cursor, currItem)
+		dirList += fmt.Sprintf("%s %s | %f\n", cursor, currItem, m.results.items[i].Likeness)
 	}
 
 	// for i := 0; i < len(m.searchResult) && i < 30; i++ {
