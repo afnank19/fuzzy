@@ -13,7 +13,7 @@ func initializeFileList() []SearchResult {
 	srs := []SearchResult{}
 
 	// Get the users home directory
-	homeDir, err := os.UserHomeDir()
+	homeDir, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ func DirWalk(path string, strs *[]SearchResult, count *int) {
 			return filepath.SkipDir
 		}
 
-		homeDir, err := os.UserHomeDir()
+		homeDir, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
@@ -58,7 +58,7 @@ func DirWalk(path string, strs *[]SearchResult, count *int) {
 		// But fzf uses a different algorithm that doesn't really perform well if you misspell
 		// your query, wherease this algorithm tries to guess what you meant
 		if !info.IsDir() {
-			*strs = append(*strs, SearchResult{Word: info.Name(), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
+			*strs = append(*strs, SearchResult{Word: strings.TrimPrefix(path, homeDir+"/"), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
 			*count++
 		}
 
@@ -94,7 +94,7 @@ func RunSearchAlgo(sr *[]SearchResult, nGramedWord []string) {
 		// 2. On each word, run the scoring algo
 		(*sr)[i].Score = ScoreWord((*sr)[i].Word, nGramedWord)
 
-		(*sr)[i].Likeness = float32((*sr)[i].Score) / float32(len((*sr)[i].Path))
+		(*sr)[i].Likeness = float64((*sr)[i].Score) * float64((*sr)[i].Score) / float64(len((*sr)[i].Word))
 	}
 
 	sort.Slice(*sr, func(i, j int) bool {
@@ -108,7 +108,13 @@ func ScoreWord(s string, nGramedWord []string) int {
 	for i := 0; i < len(nGramedWord); i++ {
 		if strings.Contains(s, nGramedWord[i]) {
 			score++
+		} else {
+			score--
 		}
+	}
+
+	if score < 0 {
+		return 0
 	}
 
 	return score
