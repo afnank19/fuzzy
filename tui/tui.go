@@ -31,31 +31,36 @@ type list struct {
 	offset int
 }
 
-type model struct {
+type Model struct {
 	turing       string
 	typedWord    string
-	results      list
-	queuedFiles  []string
+	tool         string
 	windowHeight int
 	windowWidth  int
+	results      list
+	queuedFiles  []string
+	fl           *FileList
 }
 
-func StartTUI() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+type FileList struct {
+	QueuedFiles []string
+}
+
+func StartTUI(tool string, qf *FileList) {
+	p := tea.NewProgram(initialModel(tool, qf), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
 
-func initialModel() model {
-	//
+func initialModel(tool string, qf *FileList) Model {
 	sr := initializeFileList()
 
-	return model{
-		turing:    "[+][-][*][/]",
-		typedWord: "",
-		// searchResult: sr,
+	return Model{
+		turing:       "[+][-][*][/]",
+		typedWord:    "",
+		tool:         tool,
 		windowHeight: 0,
 		windowWidth:  0,
 		results: list{
@@ -65,15 +70,16 @@ func initialModel() model {
 			offset: 0,
 		},
 		queuedFiles: []string{},
+		fl:          qf,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	// Just return `nil`, which means "no I/O right now, please."
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		// Update the terminal size when the window is resized
@@ -100,17 +106,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		case "right", "left":
-
+			// do nothing
 		case "up":
 			scrollListUp(&m.results)
 		case "down":
 			scrollListDown(&m.results)
 		case "enter":
 			m.queuedFiles = append(m.queuedFiles, m.results.items[m.results.cursor].Word)
-			openFiles(m.queuedFiles)
+			m.fl.QueuedFiles = m.queuedFiles
+			// OpenFiles(m.queuedFiles, m.tool)
 			return m, tea.Quit
 		case "tab": // this needs to be a toggle
 			m.queuedFiles = append(m.queuedFiles, m.results.items[m.results.cursor].Word)
+			m.fl.QueuedFiles = m.queuedFiles
 		default:
 			m.typedWord += msg.String()
 			// 1. Convert typedWord into nGrams
@@ -130,12 +138,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// Return the updated model to the Bubble Tea runtime for processing.
+	// Return the updated Model to the Bubble Tea runtime for processing.
 	// Note that we're not returning a command.
 	return m, nil
 }
 
-func (m model) View() string {
+func (m Model) View() string {
 	var view = lipgloss.NewStyle().Width(m.windowWidth).Height(m.windowHeight).AlignHorizontal(lipgloss.Left).AlignVertical(lipgloss.Bottom)
 	var rule = lipgloss.NewStyle().Width(m.windowWidth).Border(lipgloss.NormalBorder(), true, false, false, false).BorderForeground(lipgloss.Color("#9ccfd8"))
 
