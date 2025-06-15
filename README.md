@@ -1,5 +1,8 @@
 ### Fuzzy Finder
 
+![fz Demo](assets/demo.gif)
+
+
 The program uses the concept of fuzzy search to search through the file system.
 
 NOTE: Levenshtein has been removed 
