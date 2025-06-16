@@ -12,5 +12,8 @@ func main() {
 
 	var queuedFiles tui.FileList // declared here so it maintains state
 	tui.StartTUI(*tool, &queuedFiles)
-	tui.OpenFiles(queuedFiles.QueuedFiles, *tool)
+
+	if queuedFiles.CanOpen {
+		tui.OpenFiles(queuedFiles.QueuedFiles, *tool)
+	}
 }
