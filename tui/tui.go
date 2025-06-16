@@ -44,6 +44,7 @@ type Model struct {
 
 type FileList struct {
 	QueuedFiles []string
+	CanOpen     bool
 }
 
 func StartTUI(tool string, qf *FileList) {
@@ -114,6 +115,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.queuedFiles = append(m.queuedFiles, m.results.items[m.results.cursor].Word)
 			m.fl.QueuedFiles = m.queuedFiles
+			m.fl.CanOpen = true
 			// OpenFiles(m.queuedFiles, m.tool)
 			return m, tea.Quit
 		case "tab": // this needs to be a toggle
