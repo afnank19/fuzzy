@@ -40,6 +40,7 @@ type Model struct {
 	results      list
 	queuedFiles  []string
 	fl           *FileList
+	// onlyFolders  bool
 }
 
 type FileList struct {
@@ -47,16 +48,16 @@ type FileList struct {
 	CanOpen     bool
 }
 
-func StartTUI(tool string, qf *FileList) {
-	p := tea.NewProgram(initialModel(tool, qf), tea.WithAltScreen())
+func StartTUI(tool string, qf *FileList, oF bool) {
+	p := tea.NewProgram(initialModel(tool, qf, oF), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
 
-func initialModel(tool string, qf *FileList) Model {
-	sr := initializeFileList()
+func initialModel(tool string, qf *FileList, oF bool) Model {
+	sr := initializeFileList(oF)
 
 	return Model{
 		turing:       "[+][-][*][/]",
@@ -177,7 +178,7 @@ func (m Model) View() string {
 		dirList += fmt.Sprintf("%s\n", item)
 	}
 
-	currTotalFiles := fmt.Sprintf("%d files", len(m.results.items))
+	currTotalFiles := fmt.Sprintf("%d items", len(m.results.items))
 
 	return view.Render(dirList + rule.Render(currTotalFiles) + "\n" + input)
 }
