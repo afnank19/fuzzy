@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func initializeFileList() []SearchResult {
+func initializeFileList(onlyFolders bool) []SearchResult {
 	srs := []SearchResult{}
 
 	// Get the users home directory
@@ -20,12 +20,12 @@ func initializeFileList() []SearchResult {
 
 	count := 0
 
-	DirWalk(homeDir, &srs, &count)
+	DirWalk(homeDir, &srs, &count, onlyFolders)
 
 	return srs
 }
 
-func DirWalk(path string, strs *[]SearchResult, count *int) {
+func DirWalk(path string, strs *[]SearchResult, count *int, onlyFolders bool) {
 	// This can either take the path variable or use "./"
 	// To be modified according to use case
 	err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
@@ -51,8 +51,25 @@ func DirWalk(path string, strs *[]SearchResult, count *int) {
 		// This achieves results almost as good as fzf
 		// But fzf uses a different algorithm that doesn't really perform well if you misspell
 		// your query, wherease this algorithm tries to guess what you meant
-		if !info.IsDir() {
-			*strs = append(*strs, SearchResult{Word: strings.TrimPrefix(path, homeDir+"/"), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
+		// if onlyFolders {
+		// 	if info.IsDir() {
+		// 		*strs = append(*strs, SearchResult{Word: strings.TrimPrefix(path, homeDir+"/"), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
+		// 		*count++
+		// 	}
+		// } else {
+		// 	if !info.IsDir() {
+		// 		*strs = append(*strs, SearchResult{Word: strings.TrimPrefix(path, homeDir+"/"), MinEditDistance: 999, Likeness: 0.0, Path: strings.TrimPrefix(path, homeDir)})
+		// 		*count++
+		// 	}
+		// }
+
+		if (onlyFolders && info.IsDir()) || (!onlyFolders && !info.IsDir()) {
+			*strs = append(*strs, SearchResult{
+				Word:            strings.TrimPrefix(path, homeDir+"/"),
+				MinEditDistance: 999,
+				Likeness:        0.0,
+				Path:            strings.TrimPrefix(path, homeDir),
+			})
 			*count++
 		}
 
